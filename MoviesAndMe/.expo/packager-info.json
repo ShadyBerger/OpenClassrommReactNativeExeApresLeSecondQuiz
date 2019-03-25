@@ -1,0 +1,10 @@
+{
+  "devToolsPort": 19002,
+  "expoServerPort": 19000,
+  "packagerPort": 19001,
+  "packagerPid": 19687,
+  "expoServerNgrokUrl": "https://vz-yec.shadyshepherd.moviesandme.exp.direct",
+  "packagerNgrokUrl": "https://packager.vz-yec.shadyshepherd.moviesandme.exp.direct",
+  "ngrokPid": 19759,
+  "webpackServerPort": null
+}
