@@ -79,8 +79,7 @@ class Search extends React.Component {
               if (this.page < this.totalPages) {
                  this._loadFilms()
               }
-          }}
-        />
+          }}/>
         {this._displayLoading()}
       </View>
     )
