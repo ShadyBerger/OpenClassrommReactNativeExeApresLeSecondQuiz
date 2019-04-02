@@ -1,36 +1,57 @@
 import React from 'react'
-import { StyleSheet, View, Text, ActivityIndicator, ScrollView, Image, TouchableOpacity } from 'react-native'
+import { StyleSheet, View, Text, ActivityIndicator, ScrollView, Image, TouchableOpacity, Share, Platform, Button } from 'react-native'
 import { getFilmDetailFromApi, getImageFromApi } from '../API/TMDBApi'
 import moment from 'moment'
 import numeral from 'numeral'
 import { connect } from 'react-redux'
-
+import EnlargeShrink from '../Animations/EnlargeShrink'
 class FilmDetail extends React.Component {
+
+  static navigationOptions= ({ navigation }) => {
+    const {params} = navigation.state
+    if(params.film != undefined && Platform.OS === 'ios') {
+      return {
+        headerRight: 
+        <TouchableOpacity style={styles.share_touchable_headerrightbutton}
+        onPress={() => params.shareFilm()}>
+        <Image 
+          style={styles.share_image}
+          source={require('../Images/ic_share.png')} />
+        </TouchableOpacity>
+      }
+    }
+  }
+
   constructor(props) {
     super(props)
     this.state = {
       film: undefined,
       isLoading: false
     }
+    this._toggleFavorite = this._toggleFavorite.bind(this)
+    this._shareFilm = this._shareFilm.bind(this)
+  }
+
+  _updateNavigationParams() {
+    this.props.navigation.setParams({
+      shareFilm: this._shareFilm,
+      film: this.state.film
+    })
   }
 
   componentDidMount() {
     const favoriteFilmIndex = this.props.favoritesFilm.findIndex(item => item.id === this.props.navigation.state.params.idFilm)
-    if (favoriteFilmIndex !== -1) { // Film déjà dans nos favoris, on a déjà son détail
-      // Pas besoin d'appeler l'API ici, on ajoute le détail stocké dans notre state global au state de notre component
+    if (favoriteFilmIndex !== -1) {
       this.setState({
         film: this.props.favoritesFilm[favoriteFilmIndex]
-      })
+      }, ()=> {this._updateNavigationParams()})
       return
     }
-    // Le film n'est pas dans nos favoris, on n'a pas son détail
-    // On appelle l'API pour récupérer son détail
-    this.setState({ isLoading: true })
-    getFilmDetailFromApi(this.props.navigation.state.params.idFilm).then(data => {
-      this.setState({
-        film: data,
-        isLoading: false
-      })
+    this.setState({isLoading: true})
+    getFilmDetailFromApi(this.props.navigation.state.params.idFilm).then(data=> { this.setState({
+      film: data,
+      isLoading: false }
+      , () => {this._updateNavigationParams() })
     })
   }
 
@@ -51,15 +72,19 @@ class FilmDetail extends React.Component {
 
   _displayFavoriteImage() {
     var sourceImage = require('../Images/ic_favorite_border.png')
+    var shouldEnlarge = false
     if (this.props.favoritesFilm.findIndex(item => item.id === this.state.film.id) !== -1) {
       // Film dans nos favoris
       sourceImage = require('../Images/ic_favorite.png')
+      shouldEnlarge = true
     }
     return (
+      <EnlargeShrink shouldEnlarge={shouldEnlarge}>
       <Image
         style={styles.favorite_image}
         source={sourceImage}
       />
+      </EnlargeShrink>
     )
   }
 
@@ -96,11 +121,30 @@ class FilmDetail extends React.Component {
     }
   }
 
+  _shareFilm() {
+    const { film } = this.state
+    Share.share({ title: film.title, message: film.overview })
+  }
+
+  _displayFloatingActionButton() {
+    const {film } = this.state 
+    if (film != undefined && Platform.OS === 'android') {
+      return (
+        <TouchableOpacity style={styles.share_touchable_floatingactionbutton}
+        onPress={() => this._shareFilm()}>
+          <Image style={styles.share_image}
+          source={ require('../Images/ic_share.png')} />
+        </TouchableOpacity>
+      )
+    }
+  }
+
   render() {
     return (
       <View style={styles.main_container}>
         {this._displayLoading()}
         {this._displayFilm()}
+        {this._displayFloatingActionButton()}
       </View>
     )
   }
@@ -152,10 +196,29 @@ const styles = StyleSheet.create({
     marginRight: 5,
     marginTop: 5,
   },
-  favorite_image: {
-    width: 40,
-    height: 40
-  }
+  share_touchable_floatingactionbutton: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    right: 30,
+    bottom: 30,
+    borderRadius: 30,
+    backgroundColor: '#e91e63',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  share_image: {
+    width: 30,
+    height: 30
+  },
+  share_touchable_headerrightbutton: {
+    marginRight: 8
+  },
+  favorite_image:{
+    flex: 1,
+    width: null,
+    height: null
+  },
 })
 
 const mapStateToProps = (state) => {

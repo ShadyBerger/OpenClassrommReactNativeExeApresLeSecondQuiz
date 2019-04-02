@@ -3,6 +3,7 @@ import { StyleSheet, View, TextInput, Button, Text, FlatList, ActivityIndicator 
 import FilmItem from './FilmItem'
 import FilmList from './FilmList'
 import { getFilmsFromApiWithSearchedText } from '../API/TMDBApi'
+import { SafeAreaView } from 'react-navigation';
 
 class Search extends React.Component {
 
@@ -63,6 +64,7 @@ class Search extends React.Component {
 
   render() {
     return (
+      <SafeAreaView style={styles.main_container}>
       <View style={styles.main_container}>
         <TextInput
           style={styles.textinput}
@@ -81,6 +83,7 @@ class Search extends React.Component {
         />
         {this._displayLoading()}
       </View>
+      </SafeAreaView>
     )
   }
 }
